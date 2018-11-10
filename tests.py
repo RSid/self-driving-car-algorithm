@@ -96,5 +96,22 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
         self.assertEqual(time_increments_required, 37)
 
+    def test_large_city(self):
+        #GIVEN a large city
+        city_state = CityState(800,800)
+        request = [{'name' : 'Elon', 'start' : (335,27), 'end' : (800,7)},
+                   {'name' : 'George', 'start' : (50,2), 'end' : (4,400)}]
+        city_state.increment_time(request)
+
+        #WHEN I add more requests as I increment time
+
+        #THEN they are taken into account
+        time_increments_required = 0
+        while(city_state.car.passengers or city_state.car.pickup_requests):
+            city_state.increment_time([])
+            time_increments_required +=1
+
+        self.assertEqual(time_increments_required, 2035)
+
 if __name__ == '__main__':
     unittest.main()
