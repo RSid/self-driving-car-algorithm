@@ -1,3 +1,5 @@
+import itertools
+
 class Utils:
     @staticmethod
     def stringified_list_of_names(people):
@@ -75,11 +77,7 @@ class CityState:
         self.car = Car(0,0)
 
     def build_graph(self, x, y):
-        grid=[]
-        for i in range(x):
-            for o in range(y):
-                point = (i, o)
-                grid.append(point)
+        grid=list(itertools.product(range(x), range(y)))
         return grid
 
     def get_grid(self):
@@ -92,10 +90,14 @@ class CityState:
         distance_location_pairs = [(location, self.get_taxicab_distance(location, self.car.get_location())) for location in destinations]
         return distance_location_pairs
 
-    def get_closest_destination(self):
+    def get_destinations(self):
         dropoffs = [passenger.dropoff for passenger in self.car.passengers]
         pickups = [person.pickup for person in self.car.pickup_requests]
         destinations = dropoffs + pickups
+        return destinations
+
+    def get_closest_destination(self):
+        destinations = self.get_destinations()
         if destinations:
             destintation_distances = self.get_distances(destinations)
             return min(destintation_distances, key = lambda t: t[1])

@@ -1,4 +1,5 @@
 import unittest
+import time
 from rideshare import CityState
 from rideshare import Passenger
 
@@ -14,6 +15,18 @@ class TestRideshareInitialization(unittest.TestCase):
         #THEN I get the shape I expect
         expected_graph = [(0,0), (0,1), (1,0), (1,1)]
         self.assertEqual(city_grid, expected_graph)
+
+    def test_cannot_instantiate_too_slow(self):
+        #GIVEN a huge city
+        city_start = time.time()
+
+        #WHEN I instantiate it
+        city_state = CityState(5000, 5000)
+
+        #THEN it cannot take forever
+        elapsed = time.time() - city_start
+        self.assertTrue(elapsed < 3)
+        print('END SCENARIO')
 
 class TestSimpleRideshareScenarios(unittest.TestCase):
     def test_nothing_to_do(self):
@@ -74,6 +87,7 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
             time_increments_required +=1
 
         self.assertEqual(time_increments_required, 16)
+        print('END SCENARIO')
 
 class TestComplexRideshareScenarios(unittest.TestCase):
     def test_multiple_requests(self):
@@ -95,23 +109,43 @@ class TestComplexRideshareScenarios(unittest.TestCase):
             time_increments_required +=1
 
         self.assertEqual(time_increments_required, 37)
+        print('END SCENARIO')
 
-    def test_large_city(self):
-        #GIVEN a large city
-        city_state = CityState(800,800)
-        request = [{'name' : 'Elon', 'start' : (335,27), 'end' : (800,7)},
+    def test_large_lopsided_city(self):
+        #GIVEN a large, lopsided city
+        city_state = CityState(2000, 1000)
+        request = [{'name' : 'Elon', 'start' : (335,27), 'end' : (1500,7)},
                    {'name' : 'George', 'start' : (50,2), 'end' : (4,400)}]
         city_state.increment_time(request)
 
-        #WHEN I add more requests as I increment time
-
-        #THEN they are taken into account
+        #WHEN I navigate through it
         time_increments_required = 0
         while(city_state.car.passengers or city_state.car.pickup_requests):
             city_state.increment_time([])
             time_increments_required +=1
 
-        self.assertEqual(time_increments_required, 2035)
+        #THEN the algorithm still functions
+        self.assertEqual(time_increments_required, 2954)
+        print('END SCENARIO')
+
+    def test_cannot_run_too_slow(self):
+        #GIVEN a huge city
+        city_state = CityState(10000, 10000)
+
+        request = [{'name' : 'Elon', 'start' : (335,27), 'end' : (1500,7)},
+                   {'name' : 'George', 'start' : (50,2), 'end' : (4,400)}]
+        city_state.increment_time(request)
+
+        #WHEN I increment time
+        start_time = time.time()
+        city_state.increment_time(request)
+
+        #THEN the method cannot take forever
+        elapsed = time.time() - start_time
+        print('Elapsed time increment:')
+        print(elapsed)
+        self.assertTrue(elapsed < 0.1)
+        print('END SCENARIO')
 
 if __name__ == '__main__':
     unittest.main()
