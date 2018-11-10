@@ -106,8 +106,8 @@ class CityState:
         if  requestJson:
             new_pickups = [Passenger(person) for person in requestJson]
             self.car.pickup_requests.extend(new_pickups)
-        self.car.do_pickups()
-        self.car.do_dropoffs()
         closest_destination = self.get_closest_destination()
         self.car.move(closest_destination[0])
+        self.car.do_pickups()
+        self.car.do_dropoffs()
         self.car.print_status()
