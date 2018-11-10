@@ -73,15 +73,9 @@ class Passenger:
 
 class CityState:
     def __init__(self, x, y):
-        self.grid = self.build_graph(x, y)
+        self.max_rows = x
+        self.max_columns = y
         self.car = Car(0,0)
-
-    def build_graph(self, x, y):
-        grid=list(itertools.product(range(x), range(y)))
-        return grid
-
-    def get_grid(self):
-        return self.grid
 
     def get_taxicab_distance(self, destination, car_location):
         return abs(destination[0] - car_location[0]) + abs(destination[1] - car_location[1])

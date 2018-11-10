@@ -2,6 +2,7 @@ import unittest
 import time
 from rideshare import CityState
 from rideshare import Passenger
+import sys
 
 class TestRideshareInitialization(unittest.TestCase):
 
@@ -9,24 +10,13 @@ class TestRideshareInitialization(unittest.TestCase):
         #GIVEN a city that was instantiated as 2 x2
         city = CityState(2,2)
 
-        #WHEN I get its grid
-        city_grid = city.get_grid()
+        #WHEN I get its car location
+        car_location = city.car.get_location()
 
-        #THEN I get the shape I expect
-        expected_graph = [(0,0), (0,1), (1,0), (1,1)]
-        self.assertEqual(city_grid, expected_graph)
+        #THEN I get the origin
+        expected_location = (0,0)
+        self.assertEqual(car_location, expected_location)
 
-    def test_cannot_instantiate_too_slow(self):
-        #GIVEN a huge city
-        city_start = time.time()
-
-        #WHEN I instantiate it
-        city_state = CityState(5000, 5000)
-
-        #THEN it cannot take forever
-        elapsed = time.time() - city_start
-        self.assertTrue(elapsed < 3)
-        print('END SCENARIO')
 
 class TestSimpleRideshareScenarios(unittest.TestCase):
     def test_nothing_to_do(self):
@@ -69,6 +59,53 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         #THEN the passenger is picked up
         self.assertEqual(city_state.car.get_location(), (1,2))
         self.assertTrue(len(city_state.car.passengers) == 0)
+        print('END SCENARIO')
+
+
+    def test_picks_closest_location(self):
+        #GIVEN 2 requests
+        city_state = CityState(8,8)
+        first_pickup = {'name' : 'George', 'start' : (1,2), 'end' : (4,3)}
+        request = [{'name' : 'Elon', 'start' : (3,5), 'end' : (8,7)},
+                   first_pickup]
+
+        #WHEN I increment time the expected amount with no new requests
+        city_state.increment_time(request)
+
+        #THEN I pick up the closest passenger first
+        city_state.increment_time([])
+        city_state.increment_time([])
+        self.assertEqual(city_state.car.passengers[0], Passenger(first_pickup))
+
+        #THEN I drop them off because that's closer than the next pickup
+        city_state.increment_time([])
+        city_state.increment_time([])
+        city_state.increment_time([])
+        city_state.increment_time([])
+        self.assertEqual(len(city_state.car.passengers), 0)
+        print('END SCENARIO')
+
+    def test_picks_closest_location_irrespective_of_type(self):
+        #GIVEN 2 requests
+        city_state = CityState(8,8)
+        first_pickup = {'name' : 'George', 'start' : (1,2), 'end' : (3,5)}
+        request = [{'name' : 'Elon', 'start' : (4,3), 'end' : (8,7)},
+                   first_pickup]
+
+        #WHEN I increment time the expected amount with no new requests
+        city_state.increment_time(request)
+
+        #THEN I pick up the closest passenger first
+        city_state.increment_time([])
+        city_state.increment_time([])
+        self.assertEqual(city_state.car.passengers[0], Passenger(first_pickup))
+
+        #THEN I pick up the next person, because that's closer than the next dropoff
+        city_state.increment_time([])
+        city_state.increment_time([])
+        city_state.increment_time([])
+        city_state.increment_time([])
+        self.assertEqual(len(city_state.car.passengers), 2)
         print('END SCENARIO')
 
     def test_provided_example(self):
@@ -128,24 +165,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         self.assertEqual(time_increments_required, 2954)
         print('END SCENARIO')
 
-    def test_cannot_run_too_slow(self):
-        #GIVEN a huge city
-        city_state = CityState(10000, 10000)
 
-        request = [{'name' : 'Elon', 'start' : (335,27), 'end' : (1500,7)},
-                   {'name' : 'George', 'start' : (50,2), 'end' : (4,400)}]
-        city_state.increment_time(request)
-
-        #WHEN I increment time
-        start_time = time.time()
-        city_state.increment_time(request)
-
-        #THEN the method cannot take forever
-        elapsed = time.time() - start_time
-        print('Elapsed time increment:')
-        print(elapsed)
-        self.assertTrue(elapsed < 0.1)
-        print('END SCENARIO')
 
 if __name__ == '__main__':
     unittest.main()
