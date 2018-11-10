@@ -165,7 +165,23 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         self.assertEqual(time_increments_required, 2954)
         print('END SCENARIO')
 
+    def test_cannot_run_too_slow(self):
+          #GIVEN a huge city
+          city_state = CityState(sys.maxsize, sys.maxsize)
 
+          request = [{'name' : 'Tyador', 'start' : (335,27), 'end' : (sys.maxsize, sys.maxsize)} for i in range(100000)]
+          city_state.increment_time(request)
+
+          #WHEN I increment time
+          start_time = time.time()
+          city_state.increment_time(request)
+
+          #THEN the method cannot take forever
+          elapsed = time.time() - start_time
+          print('Elapsed time increment:')
+          print(elapsed)
+          self.assertTrue(elapsed < 0.1)
+          print('END SCENARIO')
 
 if __name__ == '__main__':
     unittest.main()
