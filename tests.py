@@ -75,5 +75,26 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
 
         self.assertEqual(time_increments_required, 16)
 
+class TestComplexRideshareScenarios(unittest.TestCase):
+    def test_multiple_requests(self):
+        #GIVEN an initial set of requests
+        city_state = CityState(8,8)
+        request = [{'name' : 'Elon', 'start' : (3,5), 'end' : (8,7)},
+                   {'name' : 'George', 'start' : (1,2), 'end' : (4,3)}]
+        city_state.increment_time(request)
+
+        #WHEN I add more requests as I increment time
+
+        #THEN they are taken into account
+        time_increments_required = 0
+        while(city_state.car.passengers or city_state.car.pickup_requests):
+            if(time_increments_required == 5):
+                city_state.increment_time([{'name' : 'Hieronymous', 'start' : (1,0), 'end' : (6,2)}])
+            else:
+                city_state.increment_time([])
+            time_increments_required +=1
+
+        self.assertEqual(time_increments_required, 37)
+
 if __name__ == '__main__':
     unittest.main()
