@@ -1,4 +1,5 @@
 import itertools
+from operator import attrgetter
 
 class Utils:
     @staticmethod
@@ -71,6 +72,15 @@ class Passenger:
     def __eq__(self, other):
         return self.name == other.name and self.pickup == other.pickup and self.dropoff == other.dropoff
 
+class Destination:
+    def __init__(self, location, distance_from_car):
+        self.location = location
+        self.distance_from_car = distance_from_car
+        self.cluster_weight = 0
+
+    def __eq__(self, other):
+        return self.location == other.location and self.distance_from_car == other.distance_from_car and self.cluster_weight == other.cluster_weight
+
 class CityState:
     def __init__(self, x, y):
         self.max_rows = x
@@ -80,30 +90,31 @@ class CityState:
     def get_taxicab_distance(self, destination, car_location):
         return abs(destination[0] - car_location[0]) + abs(destination[1] - car_location[1])
 
-    def get_distances(self, destinations):
-        distance_location_pairs = [(location, self.get_taxicab_distance(location, self.car.get_location())) for location in destinations]
-        return distance_location_pairs
-
-    def get_destinations(self):
+    def get_locations_to_go(self):
         dropoffs = [passenger.dropoff for passenger in self.car.passengers]
         pickups = [person.pickup for person in self.car.pickup_requests]
         destinations = dropoffs + pickups
         return destinations
 
-    def get_closest_destination(self):
-        destinations = self.get_destinations()
-        if destinations:
-            destintation_distances = self.get_distances(destinations)
-            return min(destintation_distances, key = lambda t: t[1])
+    def build_destinations(self, locations_to_go):
+        destinations = [Destination(location, self.get_taxicab_distance(location, self.car.get_location())) for location in locations_to_go]
+        return destinations
+
+    def get_next_destination(self):
+        locations_to_go = self.get_locations_to_go()
+        if locations_to_go:
+            destinations = self.build_destinations(locations_to_go)
+            closest_to_car = min(destinations, key=attrgetter('distance_from_car'))
+            return closest_to_car
         else:
-            return (self.car.get_location(), 0)
+            return Destination(self.car.get_location(), 0)
 
     def increment_time(self, requestJson):
         if  requestJson:
             new_pickups = [Passenger(person) for person in requestJson]
             self.car.pickup_requests.extend(new_pickups)
-        closest_destination = self.get_closest_destination()
-        self.car.move(closest_destination[0])
+        next_destination = self.get_next_destination()
+        self.car.move(next_destination.location)
         self.car.do_pickups()
         self.car.do_dropoffs()
         self.car.print_status()
