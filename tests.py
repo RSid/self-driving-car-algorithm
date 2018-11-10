@@ -168,18 +168,33 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
     def test_prefer_dense_clusters_to_closer_locales(self):
         #GIVEN a set of requests, 1 of which is close and 2 of which are far but near each other
-        city_state = CityState(10,10)
-        close_person = {'name' : 'McCavity', 'start' : (1,2), 'end' : (10,10)}
+        city_state = CityState(50,50)
+        close_person = {'name' : 'McCavity', 'start' : (10,10), 'end' : (10,10)}
         request = [close_person,
-                   {'name' : 'Ishmael', 'start' : (5,5), 'end' : (4,3)},
-                   {'name' : 'Mieville', 'start' : (5,6), 'end' : (8,7)}]
+                   {'name' : 'Ishmael', 'start' : (15,4), 'end' : (4,3)},
+                   {'name' : 'Mieville', 'start' : (15,5), 'end' : (8,7)}]
 
         #WHEN I decide which destination to choose
         city_state.increment_time(request)
 
         #THEN it is in the dense cluster even though it's further away
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (5,5))
+        self.assertEqual(next_destination.location, (15,4))
+
+    def test_prefer_closer_locales_if_densest_cluster_is_far(self):
+        #GIVEN a set of requests, 1 of which is close and 2 of which are very comparatively far, but near each other
+        city_state = CityState(100,100)
+        close_person = {'name' : 'McCavity', 'start' : (1,2), 'end' : (10,10)}
+        request = [close_person,
+                   {'name' : 'Ishmael', 'start' : (100,5), 'end' : (4,3)},
+                   {'name' : 'Mieville', 'start' : (100,6), 'end' : (8,7)}]
+
+        #WHEN I decide which destination to choose
+        city_state.increment_time(request)
+
+        #THEN it is in the dense cluster even though it's further away
+        next_destination = city_state.get_next_destination()
+        self.assertEqual(next_destination.location, (1,2))
 
 if __name__ == '__main__':
     unittest.main()

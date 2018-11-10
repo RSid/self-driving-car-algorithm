@@ -118,6 +118,8 @@ class CityState:
             [destination.build_cluster_weight(destinations, closest_to_car.distance_from_car) for destination in destinations]
 
             if any(weighted_dest.cluster_weight > 0 for weighted_dest in destinations):
+                if (closest_to_car.distance_from_car < max(int(.5 * self.max_rows), int(.5 * self.max_columns))):
+                    destinations = [destination for destination in destinations if destination.distance_from_car <= closest_to_car.distance_from_car]
                 densest_cluster = max(destinations, key=attrgetter('cluster_weight'))
                 return densest_cluster
             else:
