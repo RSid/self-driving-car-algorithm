@@ -6,6 +6,10 @@ class Utils:
     def stringified_list_of_names(people):
         return ', '.join([person.name for person in people])
 
+    @staticmethod
+    def get_taxicab_distance(location_one, location_two):
+        return abs(location_one[0] - location_two[0]) + abs(location_one[1] - location_two[1])
+
 class Car:
     def __init__(self, x, y):
         self.x_loc = x
@@ -78,6 +82,15 @@ class Destination:
         self.distance_from_car = distance_from_car
         self.cluster_weight = 0
 
+
+    def build_cluster_weight(self, destinations, closest_location_distance):
+        distance_to_neighbors = [Utils.get_taxicab_distance(neighbor.location, self.location) for neighbor in destinations if neighbor.location != self.location]
+        #let's say locations are clustered 'close' if they're closer to each other
+        #than the otherwise nearest location is to the car
+        close_neighbors = [neighbor_distance for neighbor_distance in distance_to_neighbors if neighbor_distance <= closest_location_distance]
+        if close_neighbors:
+            self.cluster_weight = len(close_neighbors)
+
     def __eq__(self, other):
         return self.location == other.location and self.distance_from_car == other.distance_from_car and self.cluster_weight == other.cluster_weight
 
@@ -87,9 +100,6 @@ class CityState:
         self.max_columns = y
         self.car = Car(0,0)
 
-    def get_taxicab_distance(self, destination, car_location):
-        return abs(destination[0] - car_location[0]) + abs(destination[1] - car_location[1])
-
     def get_locations_to_go(self):
         dropoffs = [passenger.dropoff for passenger in self.car.passengers]
         pickups = [person.pickup for person in self.car.pickup_requests]
@@ -97,7 +107,7 @@ class CityState:
         return destinations
 
     def build_destinations(self, locations_to_go):
-        destinations = [Destination(location, self.get_taxicab_distance(location, self.car.get_location())) for location in locations_to_go]
+        destinations = [Destination(location, Utils.get_taxicab_distance(location, self.car.get_location())) for location in locations_to_go]
         return destinations
 
     def get_next_destination(self):
@@ -105,7 +115,13 @@ class CityState:
         if locations_to_go:
             destinations = self.build_destinations(locations_to_go)
             closest_to_car = min(destinations, key=attrgetter('distance_from_car'))
-            return closest_to_car
+            [destination.build_cluster_weight(destinations, closest_to_car.distance_from_car) for destination in destinations]
+
+            if any(weighted_dest.cluster_weight > 0 for weighted_dest in destinations):
+                densest_cluster = max(destinations, key=attrgetter('cluster_weight'))
+                return densest_cluster
+            else:
+                return closest_to_car
         else:
             return Destination(self.car.get_location(), 0)
 
