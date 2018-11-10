@@ -1,5 +1,6 @@
 import unittest
 from rideshare import CityState
+from rideshare import Passenger
 
 class TestRideshareInitialization(unittest.TestCase):
 
@@ -15,18 +16,32 @@ class TestRideshareInitialization(unittest.TestCase):
         self.assertEqual(city_grid, expected_graph)
 
 class TestRideshareScenarios(unittest.TestCase):
-    def setUp(self):
-        self.city_state = CityState(8,8)
-
     def test_nothing_to_do(self):
         #GIVEN no requests
+        city_state = CityState(8,8)
         request = []
 
         #WHEN I increment time
-        self.city_state.increment_time(request)
+        city_state.increment_time(request)
 
         #THEN the state does not change
-        self.assertEqual(self.city_state.car.get_location(), (0,0))
+        self.assertEqual(city_state.car.get_location(), (0,0))
+        self.assertEqual(city_state.get_closest_destination(), ((0,0), 0))
+        print('END SCENARIO')
+
+    def test_picks_up_passenger(self):
+        #GIVEN a single rideshare request
+        city_state = CityState(8,8)
+        request = [{'name' : 'Hieronymous', 'start' : (1,0), 'end' : (1,2)}]
+
+        #WHEN I increment time the expected amount
+        city_state.increment_time(request)
+        city_state.increment_time([])
+
+        #THEN the passenger is picked up
+        self.assertEqual(city_state.car.get_location(), (1,1))
+        self.assertTrue(city_state.car.passengers, [Passenger(request[0])])
+        print('END SCENARIO')
 
 if __name__ == '__main__':
     unittest.main()

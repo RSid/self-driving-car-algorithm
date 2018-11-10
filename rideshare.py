@@ -19,7 +19,7 @@ class Car:
     def distance_to_movement(self, distance):
         if distance > 0:
             return 1
-        elif distance < 0:
+        elif distance <0:
             return -1
         else:
             return 0
@@ -66,6 +66,9 @@ class Passenger:
         self.pickup = json['start']
         self.dropoff = json['end']
 
+    def __eq__(self, other):
+        return self.name == other.name and self.pickup == other.pickup and self.dropoff == other.dropoff
+
 class CityState:
     def __init__(self, x, y):
         self.grid = self.build_graph(x, y)
@@ -105,7 +108,6 @@ class CityState:
             self.car.pickup_requests.extend(new_pickups)
         self.car.do_pickups()
         self.car.do_dropoffs()
-        self.car.print_status()
         closest_destination = self.get_closest_destination()
-        print('Closest destination: ' + str(closest_destination))
         self.car.move(closest_destination[0])
+        self.car.print_status()
