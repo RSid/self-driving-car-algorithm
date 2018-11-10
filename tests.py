@@ -111,7 +111,7 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
 
     def test_provided_example(self):
         #GIVEN 2 requests
-        city_state = CityState(8,8)
+        city_state = CityState(10, 10)
         request = [{'name' : 'Elon', 'start' : (3,5), 'end' : (8,7)},
                    {'name' : 'George', 'start' : (1,2), 'end' : (4,3)}]
 
