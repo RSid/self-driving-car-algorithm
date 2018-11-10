@@ -58,5 +58,22 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         self.assertTrue(len(city_state.car.passengers) == 0)
         print('END SCENARIO')
 
+    def test_provided_example(self):
+        #GIVEN 2 requests
+        city_state = CityState(8,8)
+        request = [{'name' : 'Elon', 'start' : (3,5), 'end' : (8,7)},
+                   {'name' : 'George', 'start' : (1,2), 'end' : (4,3)}]
+
+        #WHEN I increment time the expected amount with no new requests
+        city_state.increment_time(request)
+
+        #THEN the passengers are picked up and dropped off at the points I expect
+        time_increments_required = 0
+        while(city_state.car.passengers or city_state.car.pickup_requests):
+            city_state.increment_time([])
+            time_increments_required +=1
+
+        self.assertEqual(time_increments_required, 16)
+
 if __name__ == '__main__':
     unittest.main()
