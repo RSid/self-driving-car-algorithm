@@ -119,6 +119,7 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         city_state.increment_time(request)
 
         #THEN the passengers are picked up and dropped off at the points I expect
+        #in the amount of time I expect
         time_increments_required = 0
         while(city_state.car.passengers or city_state.car.pickup_requests):
             city_state.increment_time([])
@@ -136,8 +137,6 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         city_state.increment_time(request)
 
         #WHEN I add more requests as I increment time
-
-        #THEN they are taken into account
         time_increments_required = 0
         while(city_state.car.passengers or city_state.car.pickup_requests):
             if(time_increments_required == 5):
@@ -146,6 +145,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
                 city_state.increment_time([])
             time_increments_required +=1
 
+        #THEN they are taken into account
         self.assertEqual(time_increments_required, 37)
         print('END SCENARIO')
 
@@ -167,7 +167,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         print('END SCENARIO')
 
     def test_prefer_dense_clusters_to_closer_locales(self):
-        #GIVEN a set of requests, 1 of which is close and 2 of which are far but near each other
+        #GIVEN a set of requests, 1 of which is close and 2 of which are farther, but near each other
         city_state = CityState(50,50)
         close_person = {'name' : 'McCavity', 'start' : (10,10), 'end' : (10,10)}
         request = [close_person,
@@ -181,8 +181,27 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         next_destination = city_state.get_next_destination()
         self.assertEqual(next_destination.location, (15,4))
 
+    def test_prefer_denser_clusters_to_less_dense(self):
+        #GIVEN a set of clustered requests, 1 of which is closer and 1 of which are farther, but denser
+        city_state = CityState(50,50)
+        closest_person = [{'name' : 'Queequeg', 'start' : (5,10), 'end' : (40,10)}]
+        closer_cluster = [{'name' : 'McCavity', 'start' : (10,10), 'end' : (40,10)},
+            {'name' : 'Mistoffoles', 'start' : (10,11), 'end' : (20,10)}]
+
+        farther_cluster = [{'name' : 'Ishmael', 'start' : (15,4), 'end' : (4,3)},
+            {'name' : 'Mieville', 'start' : (15,5), 'end' : (8,17)},
+            {'name' : 'Starbuck', 'start' : (15,6), 'end' : (30,7)}]
+        request = closer_cluster + farther_cluster
+
+        #WHEN I decide which destination to choose
+        city_state.increment_time(request)
+
+        #THEN it is in the dense cluster even though it's further away
+        next_destination = city_state.get_next_destination()
+        self.assertEqual(next_destination.location, (15,4))
+
     def test_prefer_closer_locales_if_densest_cluster_is_far(self):
-        #GIVEN a set of requests, 1 of which is close and 2 of which are very comparatively far, but near each other
+        #GIVEN a set of requests, 1 of which is close and 2 of which are very far, but near each other
         city_state = CityState(100,100)
         close_person = {'name' : 'McCavity', 'start' : (1,2), 'end' : (10,10)}
         request = [close_person,
@@ -195,6 +214,25 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         #THEN it is in the dense cluster even though it's further away
         next_destination = city_state.get_next_destination()
         self.assertEqual(next_destination.location, (1,2))
+        print('END SCENARIO')
+
+    def test_cannot_run_too_slow(self):
+          #GIVEN a huge city
+          city_state = CityState(sys.maxsize, sys.maxsize)
+
+          request = [{'name' : 'Person' + str(i), 'start' : (335,27), 'end' : (sys.maxsize, sys.maxsize)} for i in range(500)]
+          city_state.increment_time(request)
+
+          #WHEN I increment time
+          start_time = time.time()
+          city_state.increment_time(request)
+
+          #THEN the method cannot take forever
+          elapsed = time.time() - start_time
+          print('Elapsed time increment:')
+          print(elapsed)
+          self.assertTrue(elapsed < 0.5)
+          print('END SCENARIO')
 
 if __name__ == '__main__':
     unittest.main()
