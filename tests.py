@@ -185,10 +185,10 @@ class TestComplexRideshareScenarios(unittest.TestCase):
     def test_prefer_larger_clusters_to_smaller(self):
         #GIVEN a set of clustered requests, 1 of which is closer and 1 of which is farther, but larger
         city_state = CityState(50,50)
-        individual = [{'name' : 'Queequeg', 'start' : (26,10), 'end' : (40,10)}]
+        individual = [{'name' : 'Queequeg', 'start' : (10,10), 'end' : (40,10)}]
 
-        closer_cluster = [{'name' : 'McCavity', 'start' : (28,10), 'end' : (40,10)},
-            {'name' : 'Mistoffoles', 'start' : (28,11), 'end' : (20,10)}]
+        closer_cluster = [{'name' : 'McCavity', 'start' : (30,10), 'end' : (40,10)},
+            {'name' : 'Mistoffoles', 'start' : (30,11), 'end' : (20,10)}]
 
         farther_larger_cluster = [{'name' : 'Ishmael', 'start' : (35,4), 'end' : (4,3)},
             {'name' : 'Mieville', 'start' : (35,5), 'end' : (8,17)},
@@ -205,17 +205,15 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
     def test_prefer_close_small_cluster_if_larger_cluster_is_very_far(self):
         #GIVEN a set of clustered requests, 1 of which is close and 1 of which is very far
-        city_state = CityState(500,500)
-        individual = [{'name' : 'Queequeg', 'start' : (16,10), 'end' : (40,10)}]
+        city_state = CityState(800,800)
+        individual = [{'name' : 'Queequeg', 'start' : (2,10), 'end' : (40,10)}]
 
-        closer_cluster = [{'name' : 'McCavity', 'start' : (28,10), 'end' : (40,10)},
-            {'name' : 'Mistoffoles', 'start' : (28,11), 'end' : (20,10)},
-                {'name' : 'Jennyanydots', 'start' : (27,11), 'end' : (20,10)}]
+        closer_cluster = [{'name' : 'McCavity', 'start' : (118,110), 'end' : (40,10)},
+            {'name' : 'Mistoffoles', 'start' : (118,111), 'end' : (20,10)}]
 
-        distant_large_cluster = [{'name' : 'Ishmael', 'start' : (461,4), 'end' : (4,3)},
-            {'name' : 'Mieville', 'start' : (460,5), 'end' : (8,17)},
-            {'name' : 'Starbuck', 'start' : (462,6), 'end' : (30,7)},
-            {'name' : 'Flask', 'start' : (463,6), 'end' : (30,7)}]
+        distant_large_cluster = [{'name' : 'Ishmael', 'start' : (461,460), 'end' : (4,3)},
+            {'name' : 'Mieville', 'start' : (460,460), 'end' : (8,17)},
+            {'name' : 'Starbuck', 'start' : (462,460), 'end' : (30,7)}]
 
         request = individual + closer_cluster + distant_large_cluster
 
@@ -224,7 +222,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
         #THEN it is in the smaller cluster, even though a larger one exists
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (28,10))
+        self.assertEqual(next_destination.location, (118,110))
         print('END SCENARIO')
 
     def test_cannot_run_too_slow(self):

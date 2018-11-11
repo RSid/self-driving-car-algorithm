@@ -8,4 +8,7 @@ class Cluster:
         self.size = len(destinations)
 
     def set_weight(self, normalized_size_weight, normalized_distance_weight):
-        self.weight = normalized_size_weight + normalized_distance_weight
+        if self.label == None:
+            self.weight = normalized_distance_weight
+        else:
+            self.weight = normalized_size_weight - normalized_distance_weight
