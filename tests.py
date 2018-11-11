@@ -8,7 +8,7 @@ import sys
 class TestRideshareInitialization(unittest.TestCase):
 
     def test_city_state(self):
-        #GIVEN a city that was instantiated as 2 x2
+        #GIVEN a city
         city = CityState(2,2)
 
         #WHEN I get its car location
@@ -30,7 +30,7 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
 
         #THEN the state does not change
         self.assertEqual(city_state.car.get_location(), (0,0))
-        self.assertEqual(city_state.get_next_destination(), Destination((0,0), 0))
+        self.assertEqual(city_state.get_next_destination(), Destination((0,0), 0, None))
         print('END SCENARIO')
 
     def test_picks_up_passenger(self):
@@ -128,7 +128,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         self.assertEqual(time_increments_required, 16)
         print('END SCENARIO')
 
-class TestComplexRideshareScenarios(unittest.TestCase):
     def test_multiple_requests(self):
         #GIVEN an initial set of requests
         city_state = CityState(8,8)
@@ -166,54 +165,66 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         self.assertEqual(time_increments_required, 2954)
         print('END SCENARIO')
 
-    def test_prefer_dense_clusters_to_closer_locales(self):
+class TestComplexRideshareScenarios(unittest.TestCase):
+    def test_prefer_clusters_to_individuals(self):
         #GIVEN a set of requests, 1 of which is close and 2 of which are farther, but near each other
         city_state = CityState(50,50)
-        close_person = {'name' : 'McCavity', 'start' : (10,10), 'end' : (10,10)}
+        close_person = {'name' : 'McCavity', 'start' : (10,10), 'end' : (10,11)}
+
         request = [close_person,
-                   {'name' : 'Ishmael', 'start' : (15,4), 'end' : (4,3)},
-                   {'name' : 'Mieville', 'start' : (15,5), 'end' : (8,7)}]
+                   {'name' : 'Ishmael', 'start' : (25,4), 'end' : (4,3)},
+                   {'name' : 'Mieville', 'start' : (25,5), 'end' : (8,7)}]
 
         #WHEN I decide which destination to choose
         city_state.increment_time(request)
 
-        #THEN it is in the dense cluster even though it's further away
+        #THEN it is in the cluster even though it's further away
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (15,4))
+        self.assertEqual(next_destination.location, (25,4))
 
-    def test_prefer_denser_clusters_to_less_dense(self):
-        #GIVEN a set of clustered requests, 1 of which is closer and 1 of which are farther, but denser
+    def test_prefer_larger_clusters_to_smaller(self):
+        #GIVEN a set of clustered requests, 1 of which is closer and 1 of which is farther, but larger
         city_state = CityState(50,50)
-        closest_person = [{'name' : 'Queequeg', 'start' : (25,10), 'end' : (40,10)}]
+        individual = [{'name' : 'Queequeg', 'start' : (26,10), 'end' : (40,10)}]
+
         closer_cluster = [{'name' : 'McCavity', 'start' : (28,10), 'end' : (40,10)},
             {'name' : 'Mistoffoles', 'start' : (28,11), 'end' : (20,10)}]
 
-        farther_cluster = [{'name' : 'Ishmael', 'start' : (15,4), 'end' : (4,3)},
+        farther_larger_cluster = [{'name' : 'Ishmael', 'start' : (35,4), 'end' : (4,3)},
             {'name' : 'Mieville', 'start' : (35,5), 'end' : (8,17)},
             {'name' : 'Starbuck', 'start' : (35,6), 'end' : (30,7)}]
-        request = closest_person + closer_cluster + farther_cluster
+
+        request = individual + closer_cluster + farther_larger_cluster
 
         #WHEN I decide which destination to choose
         city_state.increment_time(request)
 
-        #THEN it is in the dense cluster even though it's further away
+        #THEN it is in the larger cluster even though it's further away
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (15,4))
+        self.assertEqual(next_destination.location, (35,4))
 
-    def test_prefer_closer_locales_if_densest_cluster_is_far(self):
-        #GIVEN a set of requests, 1 of which is close and 2 of which are very far, but near each other
-        city_state = CityState(100,100)
-        close_person = {'name' : 'McCavity', 'start' : (1,2), 'end' : (10,10)}
-        request = [close_person,
-                   {'name' : 'Ishmael', 'start' : (100,5), 'end' : (4,3)},
-                   {'name' : 'Mieville', 'start' : (100,6), 'end' : (8,7)}]
+    def test_prefer_close_small_cluster_if_larger_cluster_is_very_far(self):
+        #GIVEN a set of clustered requests, 1 of which is close and 1 of which is very far
+        city_state = CityState(500,500)
+        individual = [{'name' : 'Queequeg', 'start' : (16,10), 'end' : (40,10)}]
+
+        closer_cluster = [{'name' : 'McCavity', 'start' : (28,10), 'end' : (40,10)},
+            {'name' : 'Mistoffoles', 'start' : (28,11), 'end' : (20,10)},
+                {'name' : 'Jennyanydots', 'start' : (27,11), 'end' : (20,10)}]
+
+        distant_large_cluster = [{'name' : 'Ishmael', 'start' : (461,4), 'end' : (4,3)},
+            {'name' : 'Mieville', 'start' : (460,5), 'end' : (8,17)},
+            {'name' : 'Starbuck', 'start' : (462,6), 'end' : (30,7)},
+            {'name' : 'Flask', 'start' : (463,6), 'end' : (30,7)}]
+
+        request = individual + closer_cluster + distant_large_cluster
 
         #WHEN I decide which destination to choose
         city_state.increment_time(request)
 
-        #THEN it is in the dense cluster even though it's further away
+        #THEN it is in the smaller cluster, even though a larger one exists
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (1,2))
+        self.assertEqual(next_destination.location, (28,10))
         print('END SCENARIO')
 
     def test_cannot_run_too_slow(self):
