@@ -184,14 +184,14 @@ class TestComplexRideshareScenarios(unittest.TestCase):
     def test_prefer_denser_clusters_to_less_dense(self):
         #GIVEN a set of clustered requests, 1 of which is closer and 1 of which are farther, but denser
         city_state = CityState(50,50)
-        closest_person = [{'name' : 'Queequeg', 'start' : (5,10), 'end' : (40,10)}]
-        closer_cluster = [{'name' : 'McCavity', 'start' : (10,10), 'end' : (40,10)},
-            {'name' : 'Mistoffoles', 'start' : (10,11), 'end' : (20,10)}]
+        closest_person = [{'name' : 'Queequeg', 'start' : (25,10), 'end' : (40,10)}]
+        closer_cluster = [{'name' : 'McCavity', 'start' : (28,10), 'end' : (40,10)},
+            {'name' : 'Mistoffoles', 'start' : (28,11), 'end' : (20,10)}]
 
         farther_cluster = [{'name' : 'Ishmael', 'start' : (15,4), 'end' : (4,3)},
-            {'name' : 'Mieville', 'start' : (15,5), 'end' : (8,17)},
-            {'name' : 'Starbuck', 'start' : (15,6), 'end' : (30,7)}]
-        request = closer_cluster + farther_cluster
+            {'name' : 'Mieville', 'start' : (35,5), 'end' : (8,17)},
+            {'name' : 'Starbuck', 'start' : (35,6), 'end' : (30,7)}]
+        request = closest_person + closer_cluster + farther_cluster
 
         #WHEN I decide which destination to choose
         city_state.increment_time(request)
