@@ -22,8 +22,8 @@ class CityState:
         return destinations
 
     def build_clusters(self, locations_to_go):
-        #TODO: eps must be derived from whole grid size, not just rows
-        epsilon = int(round(.10 * self.max_rows))
+        avg_map_size = (self.max_rows + self.max_columns)/2
+        epsilon = int(round(.10 * avg_map_size))
         clustering = DBSCAN(eps=epsilon, min_samples=2).fit(locations_to_go)
         locations_with_cluster_labels = []
         for index, location in enumerate(locations_to_go):
