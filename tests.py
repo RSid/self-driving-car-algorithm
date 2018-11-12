@@ -237,7 +237,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
           #GIVEN a huge city
           city_state = CityState(sys.maxsize, sys.maxsize)
 
-          request = [{'name' : 'Person' + str(i), 'start' : (335,27), 'end' : (sys.maxsize, sys.maxsize)} for i in range(2460)]
+          request = [{'name' : 'Person' + str(i), 'start' : (335,27), 'end' : (sys.maxsize, sys.maxsize)} for i in range(2000)]
           city_state.increment_time(request)
 
           #WHEN I increment time

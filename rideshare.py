@@ -10,10 +10,13 @@ from destination import Destination
 from cluster import Cluster
 
 class CityState:
+    PERFORMANCE_CAP = 2000
+
     def __init__(self, x, y):
         self.max_rows = x
         self.max_columns = y
         self.car = Car(0,0)
+        self.enqueued_requests = []
 
     def get_locations_to_go(self):
         dropoffs = [passenger.dropoff for passenger in self.car.passengers]
@@ -53,10 +56,25 @@ class CityState:
             return selected_cluster.destination_closest_to_car
         return Destination(self.car.get_location(), 0, None)
 
+    def get_requests_to_process(self, request_list):
+        if not self.enqueued_requests:
+            return request_list
+        else:
+            if len(self.enqueued_requests) > PERFORMANCE_CAP:
+                self.enqueued_requests = self.enqueued_requests[PERFORMANCE_CAP + 1:] + request_list
+                return self.enqueued_requests[0:PERFORMANCE_CAP + 1]
+            pending_requests = self.enqueued_requests + request_list
+            if len(pending_requests) < PERFORMANCE_CAP:
+                number_of_new_requests_to_execute = PERFORMANCE_CAP - len(self.enqueued_requests)
+                self.enqueued_requests = request_list[number_of_new_requests_to_execute + 1:]
+                return self.enqueued_requests + request_list[0:number_of_new_requests_to_execute + 1]
+            else:
+                return self.enqued_requests + request_list
+
     def increment_time(self, requestJson):
-        if  requestJson:
-            new_pickups = [Passenger(person) for person in requestJson]
-            self.car.pickup_requests.extend(new_pickups)
+        requests_to_process = self.get_requests_to_process(requestJson)
+        new_pickups = [Passenger(person) for person in requests_to_process]
+        self.car.pickup_requests.extend(new_pickups)
         next_destination = self.get_next_destination()
         print(next_destination.location)
         self.car.move(next_destination.location)
