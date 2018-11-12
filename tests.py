@@ -9,7 +9,7 @@ from ddt import ddt, data, unpack
 class TestRideshareInitialization(unittest.TestCase):
 
     def test_city_state(self):
-        #GIVEN a city
+        #GIVEN a new city
         city = CityState(2,2)
 
         #WHEN I get its car location
@@ -22,17 +22,16 @@ class TestRideshareInitialization(unittest.TestCase):
 
 class TestSimpleRideshareScenarios(unittest.TestCase):
     def test_nothing_to_do(self):
-        #GIVEN no requests
+        #GIVEN no requests and no passengers
         city_state = CityState(8,8)
         request = []
 
         #WHEN I increment time
         city_state.increment_time(request)
 
-        #THEN the state does not change
+        #THEN the next destination does not change
         self.assertEqual(city_state.car.get_location(), (0,0))
         self.assertEqual(city_state.get_next_destination(), Destination((0,0), 0, None))
-        print('END SCENARIO')
 
     def test_picks_up_passenger(self):
         #GIVEN a single rideshare request
@@ -46,7 +45,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         #THEN the passenger is picked up
         self.assertEqual(city_state.car.get_location(), (1,1))
         self.assertEqual(city_state.car.passengers, [Passenger(request[0])])
-        print('END SCENARIO')
 
     def test_drops_off_passenger(self):
         #GIVEN a single rideshare passenger
@@ -58,10 +56,9 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         #WHEN I increment time the expected amount
         city_state.increment_time([])
 
-        #THEN the passenger is picked up
+        #THEN the passenger is droppped off
         self.assertEqual(city_state.car.get_location(), (1,2))
         self.assertTrue(len(city_state.car.passengers) == 0)
-        print('END SCENARIO')
 
 
     def test_picks_closest_location(self):
@@ -85,7 +82,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         city_state.increment_time([])
         city_state.increment_time([])
         self.assertEqual(len(city_state.car.passengers), 0)
-        print('END SCENARIO')
 
     def test_picks_closest_location_irrespective_of_type(self):
         #GIVEN 2 requests
@@ -108,7 +104,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         city_state.increment_time([])
         city_state.increment_time([])
         self.assertEqual(len(city_state.car.passengers), 2)
-        print('END SCENARIO')
 
     def test_provided_example(self):
         #GIVEN 2 requests
@@ -127,7 +122,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
             time_increments_required +=1
 
         self.assertEqual(time_increments_required, 16)
-        print('END SCENARIO')
 
     def test_multiple_requests(self):
         #GIVEN an initial set of requests
@@ -147,7 +141,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
 
         #THEN they are taken into account
         self.assertEqual(time_increments_required, 37)
-        print('END SCENARIO')
 
     def test_large_lopsided_city(self):
         #GIVEN a large, lopsided city
@@ -164,7 +157,6 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
 
         #THEN the algorithm still functions
         self.assertEqual(time_increments_required, 2954)
-        print('END SCENARIO')
 
 @ddt
 class TestComplexRideshareScenarios(unittest.TestCase):
@@ -172,9 +164,9 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         #GIVEN a set of requests, 1 of which is close and 2 of which are farther, but near each other
         city_state = CityState(50,50)
         close_person = {'name' : 'McCavity', 'start' : (10,10), 'end' : (10,11)}
-
+        closest_cluster_location_start = (25,4)
         request = [close_person,
-                   {'name' : 'Ishmael', 'start' : (25,4), 'end' : (4,3)},
+                   {'name' : 'Ishmael', 'start' : closest_cluster_location_start, 'end' : (4,3)},
                    {'name' : 'Mieville', 'start' : (25,5), 'end' : (8,7)}]
 
         #WHEN I decide which destination to choose
@@ -182,7 +174,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
         #THEN it is in the cluster even though it's further away
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (25,4))
+        self.assertEqual(next_destination.location, closest_cluster_location_start)
 
     def test_prefer_larger_clusters_to_smaller(self):
         #GIVEN a set of clustered requests, 1 of which is closer and 1 of which is farther, but larger
@@ -192,7 +184,8 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         closer_cluster = [{'name' : 'McCavity', 'start' : (30,10), 'end' : (40,10)},
             {'name' : 'Mistoffoles', 'start' : (30,11), 'end' : (20,10)}]
 
-        farther_larger_cluster = [{'name' : 'Ishmael', 'start' : (35,4), 'end' : (4,3)},
+        closest_large_cluster_location_start = (35,4)
+        farther_larger_cluster = [{'name' : 'Ishmael', 'start' : closest_large_cluster_location_start, 'end' : (4,3)},
             {'name' : 'Mieville', 'start' : (35,5), 'end' : (8,17)},
             {'name' : 'Starbuck', 'start' : (35,6), 'end' : (30,7)}]
 
@@ -203,7 +196,7 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
         #THEN it is in the larger cluster even though it's further away
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (35,4))
+        self.assertEqual(next_destination.location, closest_large_cluster_location_start)
 
     #Let's check that our city shape-derived value of epsilon still leads to good clustering
     #in lopsided & square cities alike
@@ -231,7 +224,6 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         #THEN it is in the smaller cluster, even though a larger one exists
         next_destination = city_state.get_next_destination()
         self.assertEqual(next_destination.location, expected_next_destination)
-        print('END SCENARIO')
 
     def test_cannot_run_too_slow(self):
           #GIVEN a huge city
@@ -249,7 +241,6 @@ class TestComplexRideshareScenarios(unittest.TestCase):
           print('Elapsed time increment:')
           print(elapsed)
           self.assertTrue(elapsed < 0.5)
-          print('END SCENARIO')
 
 if __name__ == '__main__':
     unittest.main()
