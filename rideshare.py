@@ -71,8 +71,8 @@ class CityState:
             else:
                 return self.enqued_requests + request_list
 
-    def increment_time(self, requestJson):
-        requests_to_process = self.get_requests_to_process(requestJson)
+    def increment_time(self, request_json):
+        requests_to_process = self.get_requests_to_process(request_json)
         new_pickups = [Passenger(person) for person in requests_to_process]
         self.car.pickup_requests.extend(new_pickups)
         next_destination = self.get_next_destination()
