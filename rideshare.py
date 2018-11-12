@@ -1,3 +1,5 @@
+import sys
+import ast
 import itertools
 from operator import itemgetter
 from operator import attrgetter
@@ -81,3 +83,13 @@ class CityState:
         self.car.do_pickups()
         self.car.do_dropoffs()
         self.car.print_status()
+
+if __name__ == '__main__':
+     city_x = sys.argv[0]
+     city_y = sys.argv[1]
+     if not city_x or not city_y:
+         return
+     city = CityState(city_x, city_y)
+     print("City instantiated.")
+     request = input("Input request json, or empty list: ")
+     city.increment_time(ast.literal_eval(request))
