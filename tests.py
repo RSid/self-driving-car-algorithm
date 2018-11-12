@@ -4,6 +4,7 @@ from rideshare import CityState
 from rideshare import Passenger
 from rideshare import Destination
 import sys
+from ddt import ddt, data, unpack
 
 class TestRideshareInitialization(unittest.TestCase):
 
@@ -165,6 +166,7 @@ class TestSimpleRideshareScenarios(unittest.TestCase):
         self.assertEqual(time_increments_required, 2954)
         print('END SCENARIO')
 
+@ddt
 class TestComplexRideshareScenarios(unittest.TestCase):
     def test_prefer_clusters_to_individuals(self):
         #GIVEN a set of requests, 1 of which is close and 2 of which are farther, but near each other
@@ -203,17 +205,23 @@ class TestComplexRideshareScenarios(unittest.TestCase):
         next_destination = city_state.get_next_destination()
         self.assertEqual(next_destination.location, (35,4))
 
-    def test_prefer_close_small_cluster_if_larger_cluster_is_very_far(self):
+    #Let's check that our city shape-derived value of epsilon still leads to good clustering
+    #in lopsided & square cities alike
+    @data((800, 800, 100, 500), (800, 5, 100, 400), (50, 1000, 60, 500))
+    @unpack
+    def test_prefer_close_small_cluster_if_larger_cluster_is_very_far(self, city_x, city_y, close_seed_value, far_seed_value):
         #GIVEN a set of clustered requests, 1 of which is close and 1 of which is very far
-        city_state = CityState(800,800)
+        city_state = CityState(city_x, city_y)
+        dummy_end_locale = (8,8)
         individual = [{'name' : 'Queequeg', 'start' : (2,10), 'end' : (40,10)}]
 
-        closer_cluster = [{'name' : 'McCavity', 'start' : (118,110), 'end' : (40,10)},
-            {'name' : 'Mistoffoles', 'start' : (118,111), 'end' : (20,10)}]
+        expected_next_destination = (close_seed_value, close_seed_value + 1)
+        closer_cluster = [{'name' : 'McCavity', 'start' : expected_next_destination, 'end' : dummy_end_locale},
+            {'name' : 'Mistoffoles', 'start' : (close_seed_value, close_seed_value + 2), 'end' : dummy_end_locale}]
 
-        distant_large_cluster = [{'name' : 'Ishmael', 'start' : (461,460), 'end' : (4,3)},
-            {'name' : 'Mieville', 'start' : (460,460), 'end' : (8,17)},
-            {'name' : 'Starbuck', 'start' : (462,460), 'end' : (30,7)}]
+        distant_large_cluster = [{'name' : 'Ishmael', 'start' : (far_seed_value + 1, city_y - 1), 'end' : dummy_end_locale},
+            {'name' : 'Mieville', 'start' : (far_seed_value, city_y - 1), 'end' : dummy_end_locale},
+            {'name' : 'Starbuck', 'start' : (far_seed_value + 2, city_y - 1), 'end' : dummy_end_locale}]
 
         request = individual + closer_cluster + distant_large_cluster
 
@@ -222,14 +230,14 @@ class TestComplexRideshareScenarios(unittest.TestCase):
 
         #THEN it is in the smaller cluster, even though a larger one exists
         next_destination = city_state.get_next_destination()
-        self.assertEqual(next_destination.location, (118,110))
+        self.assertEqual(next_destination.location, expected_next_destination)
         print('END SCENARIO')
 
     def test_cannot_run_too_slow(self):
           #GIVEN a huge city
           city_state = CityState(sys.maxsize, sys.maxsize)
 
-          request = [{'name' : 'Person' + str(i), 'start' : (335,27), 'end' : (sys.maxsize, sys.maxsize)} for i in range(500)]
+          request = [{'name' : 'Person' + str(i), 'start' : (335,27), 'end' : (sys.maxsize, sys.maxsize)} for i in range(2460)]
           city_state.increment_time(request)
 
           #WHEN I increment time
