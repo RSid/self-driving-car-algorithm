@@ -1,6 +1,8 @@
 import sys
 import ast
 import itertools
+import argparse
+import json
 from operator import itemgetter
 from operator import attrgetter
 from sklearn.cluster import DBSCAN
@@ -85,11 +87,12 @@ class CityState:
         self.car.print_status()
 
 if __name__ == '__main__':
-     city_x = sys.argv[0]
-     city_y = sys.argv[1]
-     if not city_x or not city_y:
-         return
-     city = CityState(city_x, city_y)
+     parser = argparse.ArgumentParser(description = "Instantiate a city with an x and y argument")
+     parser.add_argument("city_x", type=int, help="rows in the city")
+     parser.add_argument("city_y", type=int, help="columns in the city")
+     args = parser.parse_args()
+     city = CityState(args.city_x, args.city_y)
      print("City instantiated.")
-     request = input("Input request json, or empty list: ")
-     city.increment_time(ast.literal_eval(request))
+     request = input("Please input your request json, in quotes (NB that tuples are not valid json. Please use a list instead. EG '[{\"name\":\"Joe\", \"start\": [3,4]}]'): ")
+     jsonified_request = json.loads(request)
+     city.increment_time(ast.literal_eval(jsonified_request))
