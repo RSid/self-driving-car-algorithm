@@ -30,7 +30,8 @@ class CityState:
 
     def build_clusters(self, locations_to_go):
         avg_map_size = (self.max_rows + self.max_columns)/2
-        epsilon = int(round(.10 * avg_map_size))
+        one_percent_of_map_size = round(.10 * avg_map_size)
+        epsilon = int(one_percent_of_map_size if one_percent_of_map_size > 0 else 1)
         clustering = DBSCAN(eps=epsilon, min_samples=2).fit(locations_to_go)
         locations_with_cluster_labels = []
         for index, location in enumerate(locations_to_go):
@@ -80,7 +81,6 @@ class CityState:
         new_pickups = [Passenger(person) for person in requests_to_process]
         self.car.pickup_requests.extend(new_pickups)
         next_destination = self.get_next_destination()
-        print(next_destination.location)
         self.car.move(next_destination.location)
         self.car.do_pickups()
         self.car.do_dropoffs()
@@ -93,6 +93,17 @@ if __name__ == '__main__':
      args = parser.parse_args()
      city = CityState(args.city_x, args.city_y)
      print("City instantiated.")
-     request = input("Please input your request json, in quotes (NB that tuples are not valid json. Please use a list instead. EG '[{\"name\":\"Joe\", \"start\": [3,4]}]'): ")
+
+     request = input("Please input your request json, in quotes. EG \"[{'name':'joe','start':(1,2), 'end':(3,4)}]\": ")
      jsonified_request = json.loads(request)
      city.increment_time(ast.literal_eval(jsonified_request))
+
+     end = False
+
+     while not end:
+         request = input("Please input any more requests, or an empty list. Type 'end' to terminate. ")
+         if request == 'end':
+             end = True
+         else:
+             jsonified_request = json.loads(request)
+             city.increment_time(ast.literal_eval(jsonified_request))

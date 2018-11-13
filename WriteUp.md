@@ -7,7 +7,7 @@ You can then increment a time step and make requests like so:
 
 `city.increment_time([{'name' : 'George', 'start' : (1,2), 'end' : (4,3)}])`
 
-Alternately, you can run the automated test suite by running `python tests.py`
+Alternately, you can run the automated test suite by running `python tests.py` or interact with it in the command line by running `python rideshare.py 10 10`.
 
 
 #Solution writeup
