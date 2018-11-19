@@ -30,8 +30,8 @@ class CityState:
 
     def build_clusters(self, locations_to_go):
         avg_map_size = (self.max_rows + self.max_columns)/2
-        one_percent_of_map_size = round(.10 * avg_map_size)
-        epsilon = int(one_percent_of_map_size if one_percent_of_map_size > 0 else 1)
+        ten_percent_of_map_size = round(.10 * avg_map_size)
+        epsilon = int(ten_percent_of_map_size if ten_percent_of_map_size > 0 else 1)
         clustering = DBSCAN(eps=epsilon, min_samples=2).fit(locations_to_go)
         locations_with_cluster_labels = []
         for index, location in enumerate(locations_to_go):
